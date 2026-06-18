@@ -1,0 +1,79 @@
+digraph {
+	No
+	year
+	month
+	day
+	hour
+	season
+	PM_Dongsi
+	PM_Dongsihuan
+	PM_Nongzhanguan
+	"PM_US Post"
+	DEWP
+	HUMI
+	PRES
+	TEMP
+	cbwd
+	Iws
+	precipitation
+	Iprec
+	hour -> month [label=-0.03]
+	PM_Dongsi -> month [label=-0.01]
+	cbwd -> month [label=-0.02]
+	Iws -> month [label=0.01]
+	hour -> season [label=0.02]
+	PM_Dongsi -> season [label=-0.00]
+	PM_Nongzhanguan -> season [label=0.00]
+	cbwd -> season [label=0.01]
+	Iws -> season [label=-0.00]
+	day -> PM_Dongsi [label=0.59]
+	hour -> PM_Dongsi [label=0.25]
+	cbwd -> PM_Dongsi [label=-4.43]
+	Iws -> PM_Dongsi [label=-0.30]
+	year -> PM_Dongsihuan [label=-0.03]
+	month -> PM_Dongsihuan [label=0.36]
+	day -> PM_Dongsihuan [label=-0.03]
+	hour -> PM_Dongsihuan [label=-0.17]
+	"PM_US Post" -> PM_Dongsihuan [label=0.35]
+	DEWP -> PM_Dongsihuan [label=0.18]
+	PRES -> PM_Dongsihuan [label=-0.24]
+	TEMP -> PM_Dongsihuan [label=-0.32]
+	Iws -> PM_Dongsihuan [label=-0.02]
+	hour -> PM_Nongzhanguan [label=-0.26]
+	Iws -> PM_Nongzhanguan [label=-0.02]
+	day -> "PM_US Post" [label=0.05]
+	hour -> "PM_US Post" [label=0.18]
+	season -> "PM_US Post" [label=-1.31]
+	HUMI -> "PM_US Post" [label=0.09]
+	TEMP -> "PM_US Post" [label=-0.55]
+	cbwd -> "PM_US Post" [label=-0.21]
+	Iws -> "PM_US Post" [label=-0.02]
+	year -> DEWP [label=0.06]
+	PM_Nongzhanguan -> DEWP [label=0.00]
+	"PM_US Post" -> DEWP [label=-0.00]
+	TEMP -> DEWP [label=0.92]
+	cbwd -> DEWP [label=-0.06]
+	Iws -> DEWP [label=-0.00]
+	year -> HUMI [label=2.00]
+	PM_Nongzhanguan -> HUMI [label=0.02]
+	cbwd -> HUMI [label=-0.42]
+	Iws -> HUMI [label=-0.10]
+	year -> PRES [label=-0.03]
+	month -> PRES [label=0.35]
+	day -> PRES [label=0.02]
+	hour -> PRES [label=0.05]
+	PM_Nongzhanguan -> PRES [label=-0.00]
+	HUMI -> PRES [label=-0.08]
+	TEMP -> PRES [label=-0.73]
+	cbwd -> PRES [label=-0.14]
+	year -> TEMP [label=-0.98]
+	day -> TEMP [label=0.06]
+	hour -> TEMP [label=0.28]
+	PM_Dongsi -> TEMP [label=0.06]
+	PM_Nongzhanguan -> TEMP [label=-0.09]
+	cbwd -> TEMP [label=-0.36]
+	Iws -> TEMP [label=-0.04]
+	{
+		rank=same
+	}
+}

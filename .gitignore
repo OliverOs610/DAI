@@ -351,3 +351,7 @@ exercises/cache/
 
 #Copyrighted datasets
 ExperimentsOnDataset/gadm41_CHN.gpkg
+edgar_extracted_monthly/
+temp_chunks/
+hourly_emissions_by_city_pollutant_sector.parquet
+hourly_emissions_beijing_final.parquet

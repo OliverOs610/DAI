@@ -95,7 +95,7 @@ try:
 except Exception as e:
     raise SystemExit(f"❌ Fehler beim Laden der EDGAR-Daten: {e}")
 
-profildaten = skript_verzeichnis / 'hourly_profiles_china.csv'
+profildaten = skript_verzeichnis / 'hourly_profiles_china2.csv'
 try:
     df_profiles = pd.read_csv(profildaten)
     # Vorab Gewichte pro (month_id, Daytype_id) berechnen; 30 kommt daher, dass es 30 "acivity_code"s gibt 
@@ -121,12 +121,25 @@ chunk_size = 2000
 num_chunks = (len(df_edgar) - 1) // chunk_size + 1
 chunk_files = []
 
-weight_array_3d = np.zeros((12, 3, 24), dtype=np.float64)  # month × daytype × hour;Ich brauche aber eigentlich für jeden activity_code ein 3d_array
+# 1. Eindeutige activity_codes identifizieren
+unique_activities = df_profiles['activity_code'].unique()
+print(f"Gefundene Activity-Codes: {unique_activities}")
+
+# 2. Mapping von activity_code zu Index erstellen
+activity_to_idx = {code: idx for idx, code in enumerate(unique_activities)}
+n_activities = len(unique_activities)
+# 3. 4D-Array erstellen: [activity, month, daytype, hour]
+weight_array_4d = np.zeros((n_activities, 12, 3, 24), dtype=np.float64)  # activity x month × daytype × hour
+# 4. Daten füllen
 for _, row in df_profiles.iterrows():
-    month = row['month_id'] - 1  # 0-basiert
-    daytype = row['Daytype_id'] - 1  # 0-basiert
+    # Indizes für die ersten 3 Dimensionen
+    activity_idx = activity_to_idx[row['activity_code']]
+    month_idx = row['month_id'] - 1      # 0-basiert
+    daytype_idx = row['Daytype_id'] - 1  # 0-basiert
+    
+    # Stunden-Werte (h1 bis h24) in das Array schreiben
     for h in range(1, 25):
-        weight_array_3d[month, daytype, h-1] = row[f'h{h}']
+        weight_array_4d[activity_idx, month_idx, daytype_idx, h-1] = row[f'h{h}']
         
 for i in range(0, len(df_edgar), chunk_size):
     chunk_num = i // chunk_size + 1
@@ -163,9 +176,10 @@ for i in range(0, len(df_edgar), chunk_size):
 # Wiederhole month/daytype für jede Stunde
     month_expanded = np.repeat(chunk_expanded['month'].values, 24)
     daytype_expanded = np.repeat(chunk_expanded['daytype'].values, 24)
-
+    #idx = activity_to_idx[activity_name]
 # Hole Gewichte direkt aus dem 3D-Array (keine Schleifen!)
-    weights = weight_array_3d[
+    weights = weight_array_4d[
+        idx,
         month_expanded - 1,  # month_id → 0-basiert
         daytype_expanded - 1,  # Daytype_id → 0-basiert
         hours - 1  # hour → 0-basiert
@@ -205,29 +219,16 @@ for i in range(0, len(df_edgar), chunk_size):
     'activity_code': np.repeat('DEFAULT', len(chunk_expanded) * 24),  # Immer string
     'emissions_kg': emissions_hourly
 })
-    #print(f"Finaler-Dataframe: {time.time() - start:.2f} Sekunden")
-    # 7. Transport-Sektoren aggregieren
-    df_transport = df_hourly[df_hourly['sector'] == 'TRANSPORT'].copy()
-    df_transport_agg = df_transport.groupby([
-        'city', 'datetime', 'pollutant', 'sector'
-    ])['emissions_kg'].sum().reset_index()
-
-    # 8. Alle Sektoren kombinieren
-    df_final = pd.concat([
-        df_hourly[df_hourly['sector'] != 'TRANSPORT'],
-        df_transport_agg
-    ], ignore_index=True)
-    #print(f"Alle Sektoren kombinieren: {time.time() - start:.2f} Sekunden")
-    # 9. Chunk speichern (PyArrow-optimiert)
+    # 7. Chunk speichern (PyArrow-optimiert)
     chunk_file = os.path.join(temp_dir, f"chunk_{chunk_num:04d}.parquet")
-    table = pa.Table.from_pandas(df_final, preserve_index=False)
+    table = pa.Table.from_pandas(df_hourly, preserve_index=False)
     pq.write_table(table, chunk_file, compression='snappy')
     chunk_files.append(chunk_file)
     print(f"  → Chunk {chunk_num} gespeichert: {chunk_file}")
     print(f"Chunk speichern: {time.time() - start:.2f} Sekunden")
 
-    # 10. Speicher bereinigen
-    del chunk, chunk_expanded, df_hourly, df_transport, df_transport_agg, df_final
+    # 8. Speicher bereinigen
+    del chunk, chunk_expanded, df_hourly,
     del emissions_daily_kg, emissions_daily_kg_exp, emissions_hourly, weights, weight_sums_expanded
     gc.collect()
     print(f"Speicher-bereinigen: {time.time() - start:.2f} Sekunden")
